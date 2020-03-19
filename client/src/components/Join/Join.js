@@ -15,9 +15,6 @@ const Join = () => {
     return (!name || !room) ? event.preventDefault() : null;
   };
 
-  console.log('name ' + name);
-  console.log('room ' + room);
-
   return (
     <div className='joinOuterContainer'>
       <div className='joinInnerContainer'>
