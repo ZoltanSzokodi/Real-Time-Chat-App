@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
+import { Link } from 'react-router-dom';
 import queryString from 'query-string';
 import io from "socket.io-client";
 
@@ -17,6 +18,8 @@ const Chat = ({ location }) => {
   const [users, setUsers] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const ENDPOINT = 'localhost:5000';
 
   useEffect(() => {
@@ -25,17 +28,15 @@ const Chat = ({ location }) => {
     socket = io(ENDPOINT);
 
     setRoom(room);
-    setName(name)
+    setName(name);
 
-    socket.emit('join', { name, room }, (error) => {
-      if (error) {
-        alert(error);
-      }
+    socket.emit('join', { name, room }, error => {
+      error && setErrorMsg(error);
     });
   }, [ENDPOINT, location.search]);
 
   useEffect(() => {
-    socket.on('message', (message) => {
+    socket.on('message', message => {
       setMessages([...messages, message]);
     });
 
@@ -48,24 +49,34 @@ const Chat = ({ location }) => {
 
       socket.off();
     }
-  }, [messages])
+  }, [messages]);
 
-  const sendMessage = (event) => {
+  const sendMessage = event => {
     event.preventDefault();
 
     if (message) {
       socket.emit('sendMessage', message, () => setMessage(''));
     }
-  }
+  };
 
   return (
-    <div className="outerContainer">
-      <div className="container">
-        <InfoBar room={room} />
-        <Messages messages={messages} name={name} />
-        <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
-      </div>
-      <TextContainer users={users} />
+    <div className='outerContainer'>
+      {errorMsg ?
+        <div className='chatErrorContainer'>
+          <h2 className='chatError'>{errorMsg}</h2>
+          <Link to='/'>
+            <button className="goBackBtn">go back</button>
+          </Link>
+        </div> :
+        <Fragment>
+          <div className='container'>
+            <InfoBar room={room} />
+            <Messages messages={messages} name={name} />
+            <Input message={message} setMessage={setMessage} sendMessage={sendMessage} />
+          </div>
+          <TextContainer users={users} />
+        </Fragment>
+      }
     </div>
   );
 }
